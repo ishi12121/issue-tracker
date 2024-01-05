@@ -7,7 +7,8 @@ export const issueSchema = z.object({
 
 export const patchIssueSchema = z.object({
   title: z.string().min(1, "Title is required.").max(255).optional(),
-  description: z.string()
+  description: z
+    .string()
     .min(1, "Description is required")
     .max(65635)
     .optional(),
@@ -16,5 +17,5 @@ export const patchIssueSchema = z.object({
     .min(1, "AssignedToUserId is required.")
     .max(255)
     .optional()
-    .nullable()
+    .nullable(),
 });
