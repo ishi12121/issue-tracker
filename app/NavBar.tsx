@@ -33,6 +33,8 @@ const NavBar = () => {
       </Container>
     </nav>
   );
+
+  
 };
 
 const NavLinks = () => {
