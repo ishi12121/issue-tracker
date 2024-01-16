@@ -1,5 +1,12 @@
 "use client";
+
 import { Skeleton } from "@/app/components";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { AiFillBug } from "react-icons/ai";
+import classnames from "classnames";
+import { useSession } from "next-auth/react";
 import {
   Avatar,
   Box,
@@ -8,18 +15,10 @@ import {
   Flex,
   Text,
 } from "@radix-ui/themes";
-import classNames from "classnames";
-
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { AiFillBug } from "react-icons/ai";
 
 const NavBar = () => {
-  //to get the current route we use this hook
-
   return (
-    <nav className=" border-b mb-5 px-5 py-3 ">
+    <nav className="border-b mb-5 px-5 py-3">
       <Container>
         <Flex justify="between">
           <Flex align="center" gap="3">
@@ -33,8 +32,6 @@ const NavBar = () => {
       </Container>
     </nav>
   );
-
-  
 };
 
 const NavLinks = () => {
@@ -44,13 +41,13 @@ const NavLinks = () => {
     { label: "Dashboard", href: "/" },
     { label: "Issues", href: "/issues/list" },
   ];
+
   return (
     <ul className="flex space-x-6">
       {links.map((link) => (
         <li key={link.href}>
           <Link
-            key={link.href}
-            className={classNames({
+            className={classnames({
               "nav-link": true,
               "!text-zinc-900": link.href === currentPath,
             })}
@@ -63,15 +60,19 @@ const NavLinks = () => {
     </ul>
   );
 };
+
 const AuthStatus = () => {
   const { status, data: session } = useSession();
+
   if (status === "loading") return <Skeleton width="3rem" />;
+
   if (status === "unauthenticated")
     return (
       <Link className="nav-link" href="/api/auth/signin">
         Login
       </Link>
     );
+
   return (
     <Box>
       <DropdownMenu.Root>
@@ -90,7 +91,7 @@ const AuthStatus = () => {
             <Text size="2">{session!.user!.email}</Text>
           </DropdownMenu.Label>
           <DropdownMenu.Item>
-            <Link href="/api/auth/signout">Logout</Link>
+            <Link href="/api/auth/signout">Log out</Link>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>

@@ -1,4 +1,5 @@
 "use client";
+
 import { Skeleton } from "@/app/components";
 import { Issue, User } from "@prisma/client";
 import { Select } from "@radix-ui/themes";
@@ -16,25 +17,26 @@ const AssigneeSelect = ({ issue }: { issue: Issue }) => {
   const assignIssue = (userId: string) => {
     axios
       .patch("/api/issues/" + issue.id, {
-        assignedToUserId: userId === " " ? null : userId,
+        assignedToUserId: userId || null,
       })
       .catch(() => {
-        toast.error("Failed to update the assignee");
+        toast.error("Changes could not be saved.");
       });
   };
+
   return (
     <>
       <Select.Root
-        defaultValue={issue.assignedToUserId || " "}
+        defaultValue={issue.assignedToUserId || ""}
         onValueChange={assignIssue}
       >
-        <Select.Trigger />
+        <Select.Trigger placeholder="Assign..." />
         <Select.Content>
           <Select.Group>
             <Select.Label>Suggestions</Select.Label>
-            <Select.Item value=" ">Unassigned</Select.Item>
+            <Select.Item value="">Unassigned</Select.Item>
             {users?.map((user) => (
-              <Select.Item key={user.id} value={String(user.id)}>
+              <Select.Item key={user.id} value={user.id}>
                 {user.name}
               </Select.Item>
             ))}
@@ -45,11 +47,13 @@ const AssigneeSelect = ({ issue }: { issue: Issue }) => {
     </>
   );
 };
+
 const useUsers = () =>
   useQuery<User[]>({
     queryKey: ["users"],
-    queryFn: () => axios.get("/api/users").then((res) => res.data),
-    staleTime: 600 * 1000, //60s
+    queryFn: () =>
+      axios.get("/api/users").then((res) => res.data),
+    staleTime: 60 * 1000, //60s
     retry: 3,
   });
 

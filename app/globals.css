@@ -2,7 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
 @media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+  }
 }
 
 body {
@@ -11,6 +20,6 @@ body {
 
 @layer utilities {
   .nav-link {
-    @apply text-gray-500 hover:text-zinc-800 transition-colors;
+    @apply text-zinc-500 hover:text-zinc-800 transition-colors;
   }
 }
