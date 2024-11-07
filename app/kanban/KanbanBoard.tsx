@@ -63,7 +63,6 @@ const KanbanBoard = () => {
   const [draggedOver, setDraggedOver] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState<Position>({ x: 0, y: 0 });
-  const [touchStart, setTouchStart] = useState<Position>({ x: 0, y: 0 });
   const dragElementRef = useRef<HTMLDivElement>(null);
   const dragTargetRef = useRef<string | null>(null);
 
@@ -75,7 +74,6 @@ const KanbanBoard = () => {
     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
-    setTouchStart({ x: clientX, y: clientY });
     setDragPosition({ x: clientX, y: clientY });
     setDraggedIssue(issue);
     setIsDragging(true);
@@ -211,7 +209,6 @@ const KanbanBoard = () => {
 
   return (
     <Box
-      px="4"
       style={{
         touchAction: "none",
         userSelect: "none",
@@ -220,7 +217,13 @@ const KanbanBoard = () => {
         minWidth: "300px",
       }}
     >
-      <Flex gap="4" width="100%" direction="row">
+      <Flex
+        gap="4"
+        width="100%"
+        direction={
+          window.innerWidth < 768 ? "column" : "row" // Switch to vertical layout on small screens
+        }
+      >
         {Object.entries(columns).map(([status, statusIssues]) => {
           const { icon, color, bg } = getStatusColor(
             status as "OPEN" | "IN_PROGRESS" | "CLOSED"
@@ -230,17 +233,16 @@ const KanbanBoard = () => {
               key={status}
               data-column-type={status}
               style={{
-                flex: 1,
+                flex: window.innerWidth < 768 ? "none" : 1, // Set flex-grow to 0 on small screens
                 borderRadius: "var(--radius-3)",
                 border:
                   draggedOver === status
                     ? "2px solid var(--blue-7)"
                     : "2px solid transparent",
                 transition: "all 0.2s ease",
-                minHeight: "200px",
-                minWidth: "300px",
-                backgroundColor:
-                  draggedOver === status ? "var(--gray-2)" : "transparent",
+                minHeight: window.innerWidth < 768 ? "auto" : "200px", // Set fixed height on small screens
+                maxHeight: window.innerWidth < 768 ? "70vh" : "none", // Set max-height on small screens
+                overflow: window.innerWidth < 768 ? "auto" : "hidden", // Enable vertical scrolling on small screens
               }}
             >
               <Flex justify="between" align="center" mb="3">
@@ -261,7 +263,7 @@ const KanbanBoard = () => {
                   padding: "var(--space-3)",
                   backgroundColor: bg,
                   borderRadius: "var(--radius-3)",
-                  minHeight: "70vh",
+                  minHeight: window.innerWidth < 768 ? "auto" : "70vh", // Set min-height on small screens
                   minWidth: "300px",
                 }}
               >
