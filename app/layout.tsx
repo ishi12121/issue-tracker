@@ -5,9 +5,11 @@ import "./theme-config.css";
 import "./globals.css";
 
 import { Inter } from "next/font/google";
-import { Container, Theme, ThemePanel } from "@radix-ui/themes";
-import NavBar from "./NavBar";
+import { useRouter } from "next/navigation";
+import PullToRefresh from "react-pull-to-refresh";
 import AuthProvider from "./auth/Provider";
+import "./globals.css";
+import NavBar from "./NavBar";
 import QueryClientProvider from "./QueryClientProvider";
 import { useCallback, useState } from "react";
 
@@ -43,10 +45,12 @@ export default function RootLayout({
         <QueryClientProvider>
           <AuthProvider>
             <Theme accentColor="violet">
-              <NavBar />
-              <main className="p-5">
-                <Container>{children}</Container>
-              </main>
+              <PullToRefresh onRefresh={onRefresh}>
+                <NavBar />
+                <main className="p-5">
+                  <Container>{children}</Container>
+                </main>
+              </PullToRefresh>
             </Theme>
           </AuthProvider>
         </QueryClientProvider>
