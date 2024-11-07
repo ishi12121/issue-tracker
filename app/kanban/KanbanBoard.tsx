@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, Flex, Text, Avatar, Box, Badge } from "@radix-ui/themes";
 import {
   ClockIcon,
@@ -27,7 +28,37 @@ interface Position {
 }
 
 const KanbanBoard = () => {
-  const [issues, setIssues] = useState<Issue[]>([]);
+  const queryClient = useQueryClient();
+  const {
+    data: issues,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Issue[]>(["issues"], async () => {
+    const response = await axios.get("/api/issues");
+    return response.data;
+  });
+
+  const { mutate: updateIssueStatus } = useMutation(
+    async (payload: {
+      issueId: string;
+      newStatus: "OPEN" | "IN_PROGRESS" | "CLOSED";
+    }) => {
+      await axios.patch(`/api/issues/${payload.issueId}`, {
+        status: payload.newStatus,
+      });
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["issues"]);
+        toast.success("Issue status updated");
+      },
+      onError: () => {
+        toast.error("Could not update issue status");
+      },
+    }
+  );
+
   const [draggedIssue, setDraggedIssue] = useState<Issue | null>(null);
   const [draggedOver, setDraggedOver] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -35,38 +66,6 @@ const KanbanBoard = () => {
   const [touchStart, setTouchStart] = useState<Position>({ x: 0, y: 0 });
   const dragElementRef = useRef<HTMLDivElement>(null);
   const dragTargetRef = useRef<string | null>(null);
-
-  const fetchIssues = async () => {
-    try {
-      const response = await axios.get("/api/issues");
-      setIssues(response.data);
-    } catch (error) {
-      toast.error("Could not fetch issues");
-    }
-  };
-
-  useEffect(() => {
-    fetchIssues();
-    const interval = setInterval(fetchIssues, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const updateIssueStatus = async (
-    issueId: string,
-    newStatus: "OPEN" | "IN_PROGRESS" | "CLOSED"
-  ) => {
-    try {
-      await axios.patch(`/api/issues/${issueId}`, { status: newStatus });
-      setIssues((prevIssues) =>
-        prevIssues.map((issue) =>
-          issue.id === issueId ? { ...issue, status: newStatus } : issue
-        )
-      );
-      toast.success("Issue status updated");
-    } catch (error) {
-      toast.error("Could not update issue status");
-    }
-  };
 
   const handleDragStart = (
     e: React.MouseEvent | React.TouchEvent,
@@ -82,67 +81,74 @@ const KanbanBoard = () => {
     setIsDragging(true);
   };
 
-  const handleDragMove = (e: TouchEvent | MouseEvent) => {
-    if (!isDragging) return;
+  const handleDragMove = useCallback(
+    (e: TouchEvent | MouseEvent) => {
+      if (!isDragging) return;
 
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
-    setDragPosition({ x: clientX, y: clientY });
+      setDragPosition({ x: clientX, y: clientY });
 
-    // Find which column we're over
-    const elements = document.elementsFromPoint(clientX, clientY);
-    const columnElement = elements.find(
-      (el) => el.getAttribute("data-column-type") !== null
-    );
+      // Find which column we're over
+      const elements = document.elementsFromPoint(clientX, clientY);
+      const columnElement = elements.find(
+        (el) => el.getAttribute("data-column-type") !== null
+      );
 
-    if (columnElement) {
-      const columnType = columnElement.getAttribute("data-column-type");
-      setDraggedOver(columnType);
-      dragTargetRef.current = columnType; // Store the current target
-    } else {
+      if (columnElement) {
+        const columnType = columnElement.getAttribute("data-column-type");
+        setDraggedOver(columnType);
+        dragTargetRef.current = columnType; // Store the current target
+      } else {
+        setDraggedOver(null);
+        dragTargetRef.current = null;
+      }
+    },
+    [isDragging]
+  );
+
+  const handleDragEnd = useCallback(
+    (e: TouchEvent | MouseEvent) => {
+      if (!isDragging || !draggedIssue) {
+        return;
+      }
+
+      // Get final position
+      const finalX =
+        "changedTouches" in e ? e.changedTouches[0].clientX : e.clientX;
+      const finalY =
+        "changedTouches" in e ? e.changedTouches[0].clientY : e.clientY;
+
+      // Find the column at release position
+      const elements = document.elementsFromPoint(finalX, finalY);
+      const columnElement = elements.find(
+        (el) => el.getAttribute("data-column-type") !== null
+      );
+
+      const finalColumnType =
+        columnElement?.getAttribute("data-column-type") ||
+        dragTargetRef.current;
+
+      if (
+        finalColumnType &&
+        draggedIssue &&
+        finalColumnType !== draggedIssue.status
+      ) {
+        updateIssueStatus({
+          issueId: draggedIssue.id,
+          newStatus: finalColumnType as "OPEN" | "IN_PROGRESS" | "CLOSED",
+        });
+      }
+
+      // Reset all states
+      setIsDragging(false);
+      setDraggedIssue(null);
       setDraggedOver(null);
       dragTargetRef.current = null;
-    }
-  };
-
-  const handleDragEnd = async (e: TouchEvent | MouseEvent) => {
-    if (!isDragging || !draggedIssue) {
-      return;
-    }
-
-    // Get final position
-    const finalX =
-      "changedTouches" in e ? e.changedTouches[0].clientX : e.clientX;
-    const finalY =
-      "changedTouches" in e ? e.changedTouches[0].clientY : e.clientY;
-
-    // Find the column at release position
-    const elements = document.elementsFromPoint(finalX, finalY);
-    const columnElement = elements.find(
-      (el) => el.getAttribute("data-column-type") !== null
-    );
-
-    const finalColumnType =
-      columnElement?.getAttribute("data-column-type") || dragTargetRef.current;
-
-    if (
-      finalColumnType &&
-      draggedIssue &&
-      finalColumnType !== draggedIssue.status
-    ) {
-      await updateIssueStatus(
-        draggedIssue.id,
-        finalColumnType as "OPEN" | "IN_PROGRESS" | "CLOSED"
-      );
-    }
-
-    // Reset all states
-    setIsDragging(false);
-    setDraggedIssue(null);
-    setDraggedOver(null);
-    dragTargetRef.current = null;
-  };
+    },
+    [isDragging, draggedIssue, updateIssueStatus]
+  );
 
   useEffect(() => {
     const handleMove = (e: TouchEvent | MouseEvent) => handleDragMove(e);
@@ -161,12 +167,13 @@ const KanbanBoard = () => {
       window.removeEventListener("mouseup", handleEnd);
       window.removeEventListener("touchend", handleEnd);
     };
-  }, [isDragging, draggedIssue]);
+  }, [isDragging, draggedIssue, handleDragEnd, handleDragMove]);
 
   const columns = {
-    OPEN: issues.filter((issue) => issue.status === "OPEN"),
-    IN_PROGRESS: issues.filter((issue) => issue.status === "IN_PROGRESS"),
-    CLOSED: issues.filter((issue) => issue.status === "CLOSED"),
+    OPEN: issues?.filter((issue) => issue.status === "OPEN") || [],
+    IN_PROGRESS:
+      issues?.filter((issue) => issue.status === "IN_PROGRESS") || [],
+    CLOSED: issues?.filter((issue) => issue.status === "CLOSED") || [],
   };
 
   const getStatusColor = (status: "OPEN" | "IN_PROGRESS" | "CLOSED") => {
@@ -193,6 +200,14 @@ const KanbanBoard = () => {
         return { icon: null, color: "gray" as const, bg: "var(--gray-3)" };
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error: {(error as Error).message}</div>;
+  }
 
   return (
     <Box
