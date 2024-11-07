@@ -1,6 +1,9 @@
 "use client";
-import { Container, Theme } from "@radix-ui/themes";
+
 import "@radix-ui/themes/styles.css";
+import "./theme-config.css";
+import "./globals.css";
+
 import { Inter } from "next/font/google";
 import { useRouter } from "next/navigation";
 import PullToRefresh from "react-pull-to-refresh";
@@ -8,7 +11,8 @@ import AuthProvider from "./auth/Provider";
 import "./globals.css";
 import NavBar from "./NavBar";
 import QueryClientProvider from "./QueryClientProvider";
-import "./theme-config.css";
+import { useCallback, useState } from "react";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -19,14 +23,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const onRefresh = async () => {
-    router.refresh();
-  };
+  const handleRefresh = useCallback(() => {
+    if (window.scrollY === 0) {
+      setIsRefreshing(true);
+      // Add your logic for refreshing the page or data here
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // Simulating a 1-second refresh
+    }
+  }, []);
+
   return (
     <html lang="en">
-      <body className={inter.variable}>
+      <body
+        className={inter.variable}
+        onTouchStart={handleRefresh}
+        onTouchEnd={() => setIsRefreshing(false)}
+      >
         <QueryClientProvider>
           <AuthProvider>
             <Theme accentColor="violet">
