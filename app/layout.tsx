@@ -9,7 +9,7 @@ import { Container, Theme } from "@radix-ui/themes";
 import NavBar from "./NavBar";
 import AuthProvider from "./auth/Provider";
 import QueryClientProvider from "./QueryClientProvider";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,23 +22,42 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [startY, setStartY] = useState<number | null>(null);
 
-  const handleRefresh = useCallback(() => {
+  const handleTouchStart = (event: React.TouchEvent) => {
     if (window.scrollY === 0) {
-      setIsRefreshing(true);
-      // Add your logic for refreshing the page or data here
+      setStartY(event.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (event: React.TouchEvent) => {
+    if (startY !== null && window.scrollY === 0) {
+      const currentY = event.touches[0].clientY;
+      if (currentY - startY > 50) {
+        // Threshold of 50px for downward drag
+        setIsRefreshing(true);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isRefreshing) {
+      // Refresh logic here
       setTimeout(() => {
         window.location.reload();
-      }, 1000); // Simulating a 1-second refresh
+      }, 1000); // 1-second delay to simulate refresh
     }
-  }, []);
+    setIsRefreshing(false);
+    setStartY(null);
+  };
 
   return (
     <html lang="en">
       <body
         className={inter.variable}
-        onTouchStart={handleRefresh}
-        onTouchEnd={() => setIsRefreshing(false)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <QueryClientProvider>
           <AuthProvider>
