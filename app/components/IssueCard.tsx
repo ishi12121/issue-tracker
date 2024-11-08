@@ -18,8 +18,6 @@ export const IssueCard = ({
   status,
 }: IssueCardProps) => (
   <Card
-    onMouseDown={(e) => onDragStart(e, issue)}
-    onTouchStart={(e) => onDragStart(e, issue)}
     style={{
       opacity: isDragged ? 0.5 : 1,
       cursor: "move",
@@ -29,7 +27,10 @@ export const IssueCard = ({
     <Flex direction="column" gap="2">
       <Flex justify="between" align="center" gap="3">
         <Flex align="center" gap="2">
-          <DragHandleDots2Icon />
+          <DragHandleDots2Icon
+            onMouseDown={(e) => onDragStart(e, issue)}
+            onTouchStart={(e) => onDragStart(e, issue)}
+          />
           <Text size="2" weight="bold">
             {issue.title}
           </Text>

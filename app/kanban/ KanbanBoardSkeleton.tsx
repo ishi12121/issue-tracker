@@ -5,7 +5,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { Box, Flex } from "@radix-ui/themes";
 import { useWindowSize } from "../hooks/useWindowSize";
 
-const KanbanSkeleton = () => {
+const KanbanBoardSkeleton = () => {
   const [mounted, setMounted] = React.useState(false);
   const { isMobile } = useWindowSize();
 
@@ -94,4 +94,4 @@ const KanbanSkeleton = () => {
   );
 };
 
-export default KanbanSkeleton;
+export default KanbanBoardSkeleton;

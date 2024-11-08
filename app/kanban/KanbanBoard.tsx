@@ -10,7 +10,7 @@ import { useWindowSize } from "../hooks/useWindowSize";
 
 import { KanbanColumn } from "../components/KanbanColumn";
 import { Issue, IssueStatus } from "../types/kanban";
-import KanbanSkeleton from "./ KanbanSkeleton";
+import KanbanBoardSkeleton from "./ KanbanBoardSkeleton";
 
 const KanbanBoard = () => {
   const [mounted, setMounted] = React.useState(false);
@@ -72,7 +72,7 @@ const KanbanBoard = () => {
   } = useDragAndDrop(updateIssueStatus);
 
   if (!mounted) return null;
-  if (isLoading) return <KanbanSkeleton />;
+  if (isLoading) return <KanbanBoardSkeleton />;
   if (isError) return <div>Error: {(error as Error).message}</div>;
 
   const columns: Record<IssueStatus, Issue[]> = {
