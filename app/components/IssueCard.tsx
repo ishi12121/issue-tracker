@@ -20,7 +20,7 @@ export const IssueCard = ({
   <Card
     style={{
       opacity: isDragged ? 0.5 : 1,
-      cursor: "move",
+      cursor: "pointer",
       touchAction: "none",
     }}
   >
@@ -28,6 +28,10 @@ export const IssueCard = ({
       <Flex justify="between" align="center" gap="3">
         <Flex align="center" gap="2">
           <DragHandleDots2Icon
+            style={{
+              cursor: isDragged ? "move" : "pointer",
+              touchAction: "none",
+            }}
             onMouseDown={(e) => onDragStart(e, issue)}
             onTouchStart={(e) => onDragStart(e, issue)}
           />
