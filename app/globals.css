@@ -23,3 +23,130 @@ body {
     @apply text-zinc-500 hover:text-zinc-800 transition-colors;
   }
 }
+/* Add to your globals.css */
+.refresh-indicator {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.refresh-icon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refresh-spinner {
+  animation: spin 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.pull-progress {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  opacity: 0.3;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pull-release {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.content-wrapper {
+  min-height: 100vh;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  position: relative;
+}
+
+.content-wrapper.dragging {
+  transform: none !important;
+}
+
+.refreshing {
+  animation: pull-release 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+[draggable="true"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: element;
+  cursor: grab;
+}
+
+[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.dragging * {
+  cursor: grabbing !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .loading-overlay {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
